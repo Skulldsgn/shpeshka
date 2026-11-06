@@ -20,14 +20,22 @@
 | `scripts/unify.py` | приводит любые кадры к единому стилю: палитра, полутона, бумага, зерно |
 | `post/shpeshka_palette.cube` | LUT палитры для DaVinci Resolve |
 | `workflows/*_api.json` | графы ComfyUI в формате API (для справки) |
-| `config.json` | адрес ComfyUI и имена файлов моделей |
+| `config.json` | адрес ComfyUI и имена файлов моделей (заполняет `detect_models.py`) |
+| `setup_shpeshka.bat` | установщик для Windows |
+
+## Установка на Windows
+
+1. Скачайте `setup_shpeshka.bat` и запустите двойным кликом. В начале файла прописаны пути `D:\AI\ComfyUI_windows_portable` и `D:\AI\shpeshka`; если у вас другие, поправьте их в Блокноте.
+2. Установщик скачает проект, сам найдёт модели Flux в ComfyUI, пропишет их в `config.json` и создаст команды `comfy`, `unify`, `timing`. Python ставить не нужно: используется встроенный в ComfyUI.
+3. Повторный запуск установщика обновляет проект, не трогая ваш `config.json` и результаты.
+
+Если отдельного VAE нет, он берётся из чекпоинта Schnell «всё в одном». Если нет и его, скачайте `ae.safetensors` из [FLUX.1-schnell на Hugging Face](https://huggingface.co/black-forest-labs/FLUX.1-schnell/tree/main) в `ComfyUI\models\vae` и запустите `detect_models.bat`.
 
 ## Быстрый старт
 
 ```bash
-pip install pillow numpy
-
-# 1. Запустить ComfyUI, вписать имена моделей в config.json
+# 1. Запустить ComfyUI (run_nvidia_gpu.bat). Команды ниже — из папки проекта;
+#    на Windows вместо «python scripts/comfy.py» пишите просто «comfy»
 
 # 2. Герой: выбрать лучшего, сохранить как refs/hero.png
 python scripts/comfy.py character single --variants 8

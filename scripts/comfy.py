@@ -79,18 +79,48 @@ PRESETS = {
 
 # ---------- графы ----------
 
+def unet_node(name, dtype):
+    if name.lower().endswith(".gguf"):  # нужен пакет ComfyUI-GGUF
+        return {"class_type": "UnetLoaderGGUF", "inputs": {"unet_name": name}}
+    return {"class_type": "UNETLoader", "inputs": {"unet_name": name, "weight_dtype": dtype}}
+
+
+def checkpoint_node(g):
+    """Чекпоинт Schnell «всё в одном»: из него можно брать CLIP и VAE, если отдельных файлов нет."""
+    ck = CFG["schnell"].get("checkpoint")
+    if not ck:
+        sys.exit("Нет отдельных CLIP/VAE и нет чекпоинта Schnell. Запустите scripts/detect_models.py "
+                 "или скачайте ae.safetensors (см. README).")
+    g["5"] = {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": ck}}
+    return "5"
+
+
+def clip_vae(g):
+    """CLIP и VAE: отдельные файлы, если указаны в config.json, иначе из чекпоинта Schnell."""
+    if CFG.get("clip_l") and CFG.get("t5"):
+        cls = "DualCLIPLoaderGGUF" if CFG["t5"].lower().endswith(".gguf") else "DualCLIPLoader"
+        g["2"] = {"class_type": cls, "inputs": {"clip_name1": CFG["clip_l"], "clip_name2": CFG["t5"], "type": "flux"}}
+        clip = ["2", 0]
+    else:
+        clip = [checkpoint_node(g), 1]
+    if CFG.get("vae"):
+        g["3"] = {"class_type": "VAELoader", "inputs": {"vae_name": CFG["vae"]}}
+        vae = ["3", 0]
+    else:
+        vae = [g.get("5") and "5" or checkpoint_node(g), 2]
+    return clip, vae
+
+
 def text_loaders(g):
     """Добавляет загрузчики модели/CLIP/VAE для Schnell. Возвращает (model, clip, vae)."""
     s = CFG["schnell"]
     if s["mode"] == "checkpoint":
-        g["1"] = {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": s["checkpoint"]}}
-        model, clip, vae = ["1", 0], ["1", 1], ["1", 2]
+        model = [checkpoint_node(g), 0]
+        clip, vae = ["5", 1], ["5", 2]
     else:
-        g["1"] = {"class_type": "UNETLoader", "inputs": {"unet_name": s["unet"], "weight_dtype": s["weight_dtype"]}}
-        g["2"] = {"class_type": "DualCLIPLoader",
-                  "inputs": {"clip_name1": CFG["clip_l"], "clip_name2": CFG["t5"], "type": "flux"}}
-        g["3"] = {"class_type": "VAELoader", "inputs": {"vae_name": CFG["vae"]}}
-        model, clip, vae = ["1", 0], ["2", 0], ["3", 0]
+        g["1"] = unet_node(s["unet"], s["weight_dtype"])
+        model = ["1", 0]
+        clip, vae = clip_vae(g)
     lora = CFG.get("lora", {})
     if lora.get("name"):
         g["4"] = {"class_type": "LoraLoaderModelOnly",
@@ -135,15 +165,13 @@ def graph_boil(image_name, prompt, seed, count, denoise, prefix):
 
 def graph_kontext(image_name, instruction, seed, prefix):
     k = CFG["kontext"]
-    g = {
-        "1": {"class_type": "UNETLoader", "inputs": {"unet_name": k["unet"], "weight_dtype": k["weight_dtype"]}},
-        "2": {"class_type": "DualCLIPLoader",
-              "inputs": {"clip_name1": CFG["clip_l"], "clip_name2": CFG["t5"], "type": "flux"}},
-        "3": {"class_type": "VAELoader", "inputs": {"vae_name": CFG["vae"]}},
+    g = {"1": unet_node(k["unet"], k["weight_dtype"])}
+    clip, vae = clip_vae(g)
+    g.update({
         "20": {"class_type": "LoadImage", "inputs": {"image": image_name}},
         "21": {"class_type": "FluxKontextImageScale", "inputs": {"image": ["20", 0]}},
-        "22": {"class_type": "VAEEncode", "inputs": {"pixels": ["21", 0], "vae": ["3", 0]}},
-        "10": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["2", 0], "text": instruction}},
+        "22": {"class_type": "VAEEncode", "inputs": {"pixels": ["21", 0], "vae": vae}},
+        "10": {"class_type": "CLIPTextEncode", "inputs": {"clip": clip, "text": instruction}},
         "23": {"class_type": "ReferenceLatent", "inputs": {"conditioning": ["10", 0], "latent": ["22", 0]}},
         "24": {"class_type": "FluxGuidance", "inputs": {"conditioning": ["23", 0], "guidance": k["guidance"]}},
         "11": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["10", 0]}},
@@ -151,9 +179,9 @@ def graph_kontext(image_name, instruction, seed, prefix):
             "model": ["1", 0], "positive": ["24", 0], "negative": ["11", 0], "latent_image": ["22", 0],
             "seed": seed, "steps": k["steps"], "cfg": 1.0,
             "sampler_name": "euler", "scheduler": "simple", "denoise": 1.0}},
-        "14": {"class_type": "VAEDecode", "inputs": {"samples": ["13", 0], "vae": ["3", 0]}},
+        "14": {"class_type": "VAEDecode", "inputs": {"samples": ["13", 0], "vae": vae}},
         "15": {"class_type": "SaveImage", "inputs": {"images": ["14", 0], "filename_prefix": prefix}},
-    }
+    })
     return g
 
 
