@@ -82,6 +82,10 @@ if errorlevel 8 goto :no_copy
 if "%KEEP_TL%"=="1" call :say "      Ваш prompts\timeline.json сохранён."
 robocopy "%SRC%\comfyui_node" "%NODE%" /E /NFL /NDL /NJH /NJS /NP >nul
 if errorlevel 8 goto :no_copy
+rem графы — в библиотеку ComfyUI (панель Workflows, папка shpeshka)
+set "WFDIR=%COMFY%\ComfyUI\user\default\workflows\shpeshka"
+if not exist "%WFDIR%" mkdir "%WFDIR%"
+copy /Y "%DEST%\workflows\*.json" "%WFDIR%\" >nul
 rem таблица таймингов под текущий таймлайн
 "%PY%" "%DEST%\scripts\timing.py" >>"%LOG%" 2>&1
 
@@ -113,7 +117,7 @@ call :say ""
 if "%ERRS%"=="0" call :say "=== Готово ==="
 if not "%ERRS%"=="0" call :say "=== Готово, но с ошибками: см. setup_log.txt ==="
 call :say "1. Перезапустите ComfyUI: закройте консоль и запустите run_nvidia_gpu.bat заново."
-call :say "2. Двойной клик по холсту, поиск «Спешка», нода ставится между VAE Decode и Save Image."
+call :say "2. Графы: панель Workflows слева, папка shpeshka, или перетащите JSON из %DEST%\workflows в окно."
 call :say "Лог: %LOG%"
 echo.
 pause
