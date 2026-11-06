@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CLIP_L, T5, VAE = "clip_l.safetensors", "t5xxl_fp8_e4m3fn_scaled.safetensors", "ae.safetensors"
-SCHNELL, KONTEXT = "flux1-schnell.safetensors", "flux1-dev-kontext_fp8_scaled.safetensors"
+SCHNELL, KONTEXT = "flux1-schnell-fp8.safetensors", "flux1-dev-kontext_fp8_scaled.safetensors"  # Schnell — чекпоинт «всё в одном» из models/checkpoints
 STYLE_DEFAULTS = ["#111111, #E9DFC8", 0.9, 0.35, 21, 0.035, 0.02, 0, 0, 0]
 OURS, NOTE = ("#4a3a1c", "#2e2412"), ("#432", "#653")
 
@@ -57,7 +57,7 @@ def common(w, unet_name, dtype, title):
     return unet, clip, vae
 
 
-def tail(w, x, ks, vae, prefix):
+def tail(w, x, ks, vae, prefix, vae_slot=0):
     dec = w.node("VAEDecode", (x, 0), (200, 50), inputs=[("samples", "LATENT"), ("vae", "VAE")],
                  outputs=[("IMAGE", "IMAGE")])
     raw = w.node("PreviewImage", (x, 100), (320, 520), inputs=[("images", "IMAGE")], title="До стиля (не сохраняется)")
@@ -66,7 +66,7 @@ def tail(w, x, ks, vae, prefix):
     save = w.node("SaveImage", (x + 360, 380), (340, 520), inputs=[("images", "IMAGE")],
                   widgets=[prefix], title="После стиля (сохраняется)")
     w.link(ks, 0, dec, "samples")
-    w.link(vae, 0, dec, "vae")
+    w.link(vae, vae_slot, dec, "vae")
     w.link(dec, 0, raw, "images")
     w.link(dec, 0, style, "images")
     w.link(style, 0, save, "images")
@@ -74,7 +74,10 @@ def tail(w, x, ks, vae, prefix):
 
 def kadr_schnell():
     w = WF()
-    unet, clip, vae = common(w, SCHNELL, "fp8_e4m3fn", "Модель: Flux Schnell")
+    # чекпоинт «всё в одном»: модель, текстовые энкодеры и VAE в одном файле
+    ckpt = w.node("CheckpointLoaderSimple", (0, 0), (380, 100),
+                  outputs=[("MODEL", "MODEL"), ("CLIP", "CLIP"), ("VAE", "VAE")],
+                  widgets=[SCHNELL], title="Модель: Flux Schnell (checkpoints)")
     prompt = w.node("CLIPTextEncode", (440, 0), (440, 260), inputs=[("clip", "CLIP")],
                     outputs=[("CONDITIONING", "CONDITIONING")], widgets=[""], title="Ваш промпт")
     zero = w.node("ConditioningZeroOut", (440, 310), (300, 30), inputs=[("conditioning", "CONDITIONING")],
@@ -87,20 +90,19 @@ def kadr_schnell():
                 widgets=[0, "randomize", 4, 1.0, "euler", "simple", 1.0])
     w.node("Note", (0, 430), (380, 200), title="Подсказка", color=NOTE, widgets=[
         "Новый кадр, Flux Schnell.\n\n"
-        "• Модель должна быть Schnell: 4 шага, CFG 1.\n"
-        "• Красная нода = у вас другое имя файла,\n"
-        "  выберите свой в списке.\n"
+        "• Модель — Schnell из папки checkpoints:\n"
+        "  4–8 шагов, CFG 1. Kontext сюда не ставить.\n"
         "• Слева превью «до стиля», справа «после» —\n"
         "  сохраняется только «после».\n"
         "• Нода «Спешка: стиль» по умолчанию под силуэты;\n"
         "  всё выключается нулями."])
-    w.link(unet, 0, ks, "model")
-    w.link(clip, 0, prompt, "clip")
+    w.link(ckpt, 0, ks, "model")
+    w.link(ckpt, 1, prompt, "clip")
     w.link(prompt, 0, ks, "positive")
     w.link(prompt, 0, zero, "conditioning")
     w.link(zero, 0, ks, "negative")
     w.link(size, 0, ks, "latent_image")
-    tail(w, 1280, ks, vae, "shpeshka/kadr")
+    tail(w, 1280, ks, ckpt, "shpeshka/kadr", vae_slot=2)
     w.dump("kadr_schnell.json")
 
 

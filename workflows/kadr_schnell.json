@@ -1,17 +1,17 @@
 {
- "last_node_id": 12,
+ "last_node_id": 10,
  "last_link_id": 11,
  "nodes": [
   {
    "id": 1,
-   "type": "UNETLoader",
+   "type": "CheckpointLoaderSimple",
    "pos": [
     0,
     0
    ],
    "size": [
     380,
-    90
+    100
    ],
    "flags": {},
    "order": 0,
@@ -25,88 +25,34 @@
       1
      ],
      "slot_index": 0
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "UNETLoader"
-   },
-   "widgets_values": [
-    "flux1-schnell.safetensors",
-    "fp8_e4m3fn"
-   ],
-   "title": "Модель: Flux Schnell"
-  },
-  {
-   "id": 2,
-   "type": "DualCLIPLoader",
-   "pos": [
-    0,
-    140
-   ],
-   "size": [
-    380,
-    130
-   ],
-   "flags": {},
-   "order": 1,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
+    },
     {
      "name": "CLIP",
      "type": "CLIP",
      "links": [
       2
      ],
-     "slot_index": 0
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "DualCLIPLoader"
-   },
-   "widgets_values": [
-    "clip_l.safetensors",
-    "t5xxl_fp8_e4m3fn_scaled.safetensors",
-    "flux",
-    "default"
-   ],
-   "title": "Текстовые энкодеры"
-  },
-  {
-   "id": 3,
-   "type": "VAELoader",
-   "pos": [
-    0,
-    320
-   ],
-   "size": [
-    380,
-    60
-   ],
-   "flags": {},
-   "order": 2,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
+     "slot_index": 1
+    },
     {
      "name": "VAE",
      "type": "VAE",
      "links": [
       8
      ],
-     "slot_index": 0
+     "slot_index": 2
     }
    ],
    "properties": {
-    "Node name for S&R": "VAELoader"
+    "Node name for S&R": "CheckpointLoaderSimple"
    },
    "widgets_values": [
-    "ae.safetensors"
+    "flux1-schnell-fp8.safetensors"
    ],
-   "title": "VAE"
+   "title": "Модель: Flux Schnell (checkpoints)"
   },
   {
-   "id": 4,
+   "id": 2,
    "type": "CLIPTextEncode",
    "pos": [
     440,
@@ -117,7 +63,7 @@
     260
    ],
    "flags": {},
-   "order": 3,
+   "order": 1,
    "mode": 0,
    "inputs": [
     {
@@ -146,7 +92,7 @@
    "title": "Ваш промпт"
   },
   {
-   "id": 5,
+   "id": 3,
    "type": "ConditioningZeroOut",
    "pos": [
     440,
@@ -157,7 +103,7 @@
     30
    ],
    "flags": {},
-   "order": 4,
+   "order": 2,
    "mode": 0,
    "inputs": [
     {
@@ -182,7 +128,7 @@
    "widgets_values": []
   },
   {
-   "id": 6,
+   "id": 4,
    "type": "EmptySD3LatentImage",
    "pos": [
     440,
@@ -193,7 +139,7 @@
     110
    ],
    "flags": {},
-   "order": 5,
+   "order": 3,
    "mode": 0,
    "inputs": [],
    "outputs": [
@@ -217,7 +163,7 @@
    "title": "Размер 9:16, batch = вариантов за раз"
   },
   {
-   "id": 7,
+   "id": 5,
    "type": "KSampler",
    "pos": [
     920,
@@ -228,7 +174,7 @@
     270
    ],
    "flags": {},
-   "order": 6,
+   "order": 4,
    "mode": 0,
    "inputs": [
     {
@@ -276,7 +222,7 @@
    ]
   },
   {
-   "id": 8,
+   "id": 6,
    "type": "Note",
    "pos": [
     0,
@@ -287,7 +233,7 @@
     200
    ],
    "flags": {},
-   "order": 7,
+   "order": 5,
    "mode": 0,
    "inputs": [],
    "outputs": [],
@@ -295,14 +241,14 @@
     "Node name for S&R": "Note"
    },
    "widgets_values": [
-    "Новый кадр, Flux Schnell.\n\n• Модель должна быть Schnell: 4 шага, CFG 1.\n• Красная нода = у вас другое имя файла,\n  выберите свой в списке.\n• Слева превью «до стиля», справа «после» —\n  сохраняется только «после».\n• Нода «Спешка: стиль» по умолчанию под силуэты;\n  всё выключается нулями."
+    "Новый кадр, Flux Schnell.\n\n• Модель — Schnell из папки checkpoints:\n  4–8 шагов, CFG 1. Kontext сюда не ставить.\n• Слева превью «до стиля», справа «после» —\n  сохраняется только «после».\n• Нода «Спешка: стиль» по умолчанию под силуэты;\n  всё выключается нулями."
    ],
    "title": "Подсказка",
    "color": "#432",
    "bgcolor": "#653"
   },
   {
-   "id": 9,
+   "id": 7,
    "type": "VAEDecode",
    "pos": [
     1280,
@@ -313,7 +259,7 @@
     50
    ],
    "flags": {},
-   "order": 8,
+   "order": 6,
    "mode": 0,
    "inputs": [
     {
@@ -344,7 +290,7 @@
    "widgets_values": []
   },
   {
-   "id": 10,
+   "id": 8,
    "type": "PreviewImage",
    "pos": [
     1280,
@@ -355,7 +301,7 @@
     520
    ],
    "flags": {},
-   "order": 9,
+   "order": 7,
    "mode": 0,
    "inputs": [
     {
@@ -372,7 +318,7 @@
    "title": "До стиля (не сохраняется)"
   },
   {
-   "id": 11,
+   "id": 9,
    "type": "ShpeshkaStyle",
    "pos": [
     1640,
@@ -383,7 +329,7 @@
     330
    ],
    "flags": {},
-   "order": 10,
+   "order": 8,
    "mode": 0,
    "inputs": [
     {
@@ -420,7 +366,7 @@
    "bgcolor": "#2e2412"
   },
   {
-   "id": 12,
+   "id": 10,
    "type": "SaveImage",
    "pos": [
     1640,
@@ -431,7 +377,7 @@
     520
    ],
    "flags": {},
-   "order": 11,
+   "order": 9,
    "mode": 0,
    "inputs": [
     {
@@ -455,87 +401,87 @@
    1,
    1,
    0,
-   7,
+   5,
    0,
    "MODEL"
   ],
   [
    2,
+   1,
+   1,
    2,
-   0,
-   4,
    0,
    "CLIP"
   ],
   [
    3,
-   4,
+   2,
    0,
-   7,
+   5,
    1,
    "CONDITIONING"
   ],
   [
    4,
-   4,
+   2,
    0,
-   5,
+   3,
    0,
    "CONDITIONING"
   ],
   [
    5,
-   5,
+   3,
    0,
-   7,
+   5,
    2,
    "CONDITIONING"
   ],
   [
    6,
-   6,
+   4,
    0,
-   7,
+   5,
    3,
    "LATENT"
   ],
   [
    7,
-   7,
+   5,
    0,
-   9,
+   7,
    0,
    "LATENT"
   ],
   [
    8,
-   3,
-   0,
-   9,
+   1,
+   2,
+   7,
    1,
    "VAE"
   ],
   [
    9,
-   9,
+   7,
    0,
-   10,
-   0,
-   "IMAGE"
-  ],
-  [
-   10,
-   9,
-   0,
-   11,
+   8,
    0,
    "IMAGE"
   ],
   [
-   11,
-   11,
+   10,
+   7,
    0,
-   12,
+   9,
+   0,
+   "IMAGE"
+  ],
+  [
+   11,
+   9,
+   0,
+   10,
    0,
    "IMAGE"
   ]
