@@ -10,6 +10,7 @@ rem ===================================================
 set "PY=%COMFY%\python_embeded\python.exe"
 set "ZIP=%TEMP%\shpeshka.zip"
 set "UNZ=%TEMP%\shpeshka_unz"
+set "NODE=%COMFY%\ComfyUI\custom_nodes\shpeshka"
 
 echo.
 echo === Установка проекта «Спешка» ===
@@ -24,7 +25,7 @@ if not exist "%PY%" (
   exit /b 1
 )
 
-echo [1/5] Скачиваю проект с GitHub...
+echo [1/4] Скачиваю проект с GitHub...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$ProgressPreference='SilentlyContinue';" ^
   "Invoke-WebRequest -Uri 'https://github.com/Skulldsgn/shpeshka/archive/refs/heads/main.zip' -OutFile '%ZIP%';" ^
@@ -36,10 +37,12 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [2/5] Копирую файлы в %DEST%...
-if exist "%DEST%\config.json" (
-  rem обновление: свой config.json не трогаем
-  robocopy "%UNZ%\shpeshka-main" "%DEST%" /E /XF config.json /NFL /NDL /NJH /NJS /NP >nul
+echo [2/4] Копирую файлы в %DEST%...
+rem ваши правки таймлайна и сгенерированная таблица не перезаписываются
+set "KEEP="
+if exist "%DEST%\prompts\timeline.json" set "KEEP=timeline.json timing.md"
+if defined KEEP (
+  robocopy "%UNZ%\shpeshka-main" "%DEST%" /E /XF %KEEP% /NFL /NDL /NJH /NJS /NP >nul
 ) else (
   robocopy "%UNZ%\shpeshka-main" "%DEST%" /E /NFL /NDL /NJH /NJS /NP >nul
 )
@@ -48,32 +51,18 @@ if errorlevel 8 (
   pause
   exit /b 1
 )
-mkdir "%DEST%\refs" 2>nul
-mkdir "%DEST%\selects" 2>nul
-mkdir "%DEST%\final" 2>nul
 
-echo [3/5] Ищу модели в ComfyUI и записываю config.json...
-"%PY%" "%DEST%\scripts\detect_models.py" "%COMFY%"
+rem убираем то, что ставили прошлые версии и что больше не нужно
+for %%F in (comfy.bat detect_models.bat config.json prompts\scenes.json prompts\character.json ^
+            scripts\comfy.py scripts\detect_models.py scripts\make_ui_workflows.py ^
+            docs\character.md docs\pipeline.md) do if exist "%DEST%\%%F" del /q "%DEST%\%%F"
+for %%D in (workflows post) do if exist "%DEST%\%%D" rmdir /s /q "%DEST%\%%D"
+if exist "%COMFY%\ComfyUI\user\default\workflows\shpeshka" rmdir /s /q "%COMFY%\ComfyUI\user\default\workflows\shpeshka"
 
-echo [4/5] Ставлю ноды «Спешка» в ComfyUI...
-set "NODE=%COMFY%\ComfyUI\custom_nodes\shpeshka"
-robocopy "%DEST%\comfyui_node" "%NODE%" /E /NFL /NDL /NJH /NJS /NP >nul
-robocopy "%DEST%\prompts" "%NODE%\prompts" /E /NFL /NDL /NJH /NJS /NP >nul
-> "%NODE%\project_path.txt" echo %DEST%
-"%PY%" "%DEST%\scripts\make_ui_workflows.py" >nul
-set "WFDIR=%COMFY%\ComfyUI\user\default\workflows\shpeshka"
-mkdir "%WFDIR%" 2>nul
-copy /Y "%DEST%\workflows\1_kadr_schnell.json" "%WFDIR%\" >nul
-copy /Y "%DEST%\workflows\2_kontext_pravka.json" "%WFDIR%\" >nul
-echo     Готово. Перезапустите ComfyUI: ноды в меню «Спешка»,
-echo     готовые графы — на панели Workflows в папке shpeshka.
+echo [3/4] Ставлю ноду «Спешка: стиль» в ComfyUI...
+robocopy "%DEST%\comfyui_node" "%NODE%" /MIR /NFL /NDL /NJH /NJS /NP >nul
 
-echo [5/5] Создаю ярлыки команд...
-(
-  echo @echo off
-  echo chcp 65001 ^>nul
-  echo "%PY%" "%DEST%\scripts\comfy.py" %%*
-) > "%DEST%\comfy.bat"
+echo [4/4] Создаю команды unify и timing...
 (
   echo @echo off
   echo chcp 65001 ^>nul
@@ -84,21 +73,13 @@ echo [5/5] Создаю ярлыки команд...
   echo chcp 65001 ^>nul
   echo "%PY%" "%DEST%\scripts\timing.py" %%*
 ) > "%DEST%\timing.bat"
-(
-  echo @echo off
-  echo chcp 65001 ^>nul
-  echo "%PY%" "%DEST%\scripts\detect_models.py" "%COMFY%"
-  echo pause
-) > "%DEST%\detect_models.bat"
 
 del "%ZIP%" 2>nul
 rmdir /s /q "%UNZ%" 2>nul
 
 echo.
 echo === Готово ===
-echo Дальше: запустите ComfyUI (run_nvidia_gpu.bat), потом в открывшемся окне:
-echo     comfy character single --variants 8
-echo Результаты будут в %DEST%\output
+echo Перезапустите ComfyUI (закройте консоль и запустите заново).
+echo Нода: двойной клик по холсту, поиск «Спешка». Ставится между VAE Decode и Save Image.
 echo.
-start "Спешка" cmd /k "cd /d "%DEST%""
 pause

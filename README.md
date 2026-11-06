@@ -1,76 +1,37 @@
 # Спешка
 
-Вертикальный клип (~60 с) для Reels / Shorts / TikTok: абстрактные таймлапсы бесконечной суеты, рисованная грязно-комиксная стилистика. Без съёмок, всё генерируется локально в ComfyUI (Flux Schnell + Flux Kontext).
-
-![палитра](docs/palette.png)
+Вертикальный клип (~60 с) для Reels / Shorts / TikTok. Генерация в ComfyUI. Промпты, сцены и стиль — ваши; здесь только инструменты.
 
 ## Что где
 
 | Путь | Что это |
 |---|---|
-| `docs/style-bible.md` | стайл-гайд: палитра, линия, фактура, промпт-хвост, команды для Kontext |
-| `docs/pipeline.md` | пошаговый процесс: три приёма анимации, выравнивание стиля, монтаж |
-| `docs/character.md` | герой клипа: дизайн и как его генерировать |
-| `docs/timing.md` | тайминги всех 31 шотов под бит (генерируется) |
-| `prompts/character.json` | промпты героя и его поз |
-| `prompts/scenes.json` | 15 сцен: промпт, вариант с героем, приём анимации |
-| `prompts/timeline.json` | монтажная сетка в тактах |
-| `scripts/timing.py` | пересчёт таймингов, нарезка песни, аниматик |
-| `scripts/comfy.py` | пакетная генерация через API ComfyUI (ключевые кадры, кипящая линия, Kontext) |
-| `comfyui_node/` | ноды ComfyUI «Спешка: промпт сцены» и «Спешка: стиль» |
-| `scripts/unify.py` | приводит любые кадры к единому стилю: палитра, полутона, бумага, зерно |
-| `post/shpeshka_palette.cube` | LUT палитры для DaVinci Resolve |
-| `workflows/*_api.json` | графы ComfyUI в формате API (для справки) |
-| `config.json` | адрес ComfyUI и имена файлов моделей (заполняет `detect_models.py`) |
-| `setup_shpeshka.bat` | установщик для Windows |
+| `comfyui_node/` | нода ComfyUI **«Спешка: стиль»**: палитра, полутона, сдвиг цвета, бумага, зерно — всё настраивается и выключается |
+| `scripts/unify.py` | то же самое для папки кадров + генерация LUT для DaVinci из вашей палитры |
+| `prompts/timeline.json` | монтажная сетка в тактах: ваши шоты и их длины |
+| `scripts/timing.py` | пересчёт таймингов, нарезка минуты песни, аниматик |
+| `docs/timing.md` | таблица таймингов (генерируется из timeline.json) |
+| `docs/style-bible.md` | заметки и идеи по стилю, справочник |
 
 ## Установка на Windows
 
-1. Скачайте `setup_shpeshka.bat` и запустите двойным кликом. В начале файла прописаны пути `D:\AI\ComfyUI_windows_portable` и `D:\AI\shpeshka`; если у вас другие, поправьте их в Блокноте.
-2. Установщик скачает проект, сам найдёт модели Flux в ComfyUI, пропишет их в `config.json` и создаст команды `comfy`, `unify`, `timing`. Python ставить не нужно: используется встроенный в ComfyUI.
-3. Ставит в ComfyUI две ноды (меню **Спешка**, после перезапуска ComfyUI):
-   - **Спешка: промпт сцены** — выбор сцены или героя из раскадровки, стилевой хвост дописывается сам; вместо обычного CLIP Text Encode.
-   - **Спешка: стиль** — палитра, полутона, бумага, зерно; ставится перед Save Image. Это то же самое, что `unify.py`.
-4. Повторный запуск установщика обновляет проект, не трогая ваш `config.json` и результаты.
+Запустите `setup_shpeshka.bat` (пути в начале файла: `D:\AI\ComfyUI_windows_portable` и `D:\AI\shpeshka`). Он:
+1. скачивает проект в `D:\AI\shpeshka`;
+2. ставит ноду в `ComfyUI\custom_nodes\shpeshka`;
+3. создаёт команды `unify.bat` и `timing.bat` (работают на встроенном Python ComfyUI).
 
-Если отдельного VAE нет, он берётся из чекпоинта Schnell «всё в одном». Если нет и его, скачайте `ae.safetensors` из [FLUX.1-schnell на Hugging Face](https://huggingface.co/black-forest-labs/FLUX.1-schnell/tree/main) в `ComfyUI\models\vae` и запустите `detect_models.bat`.
+После установки перезапустите ComfyUI. Нода: двойной клик по холсту → поиск «Спешка», ставится между **VAE Decode** и **Save Image**.
 
-## Быстрый старт
+Повторный запуск установщика обновляет проект, ваши файлы (`prompts/timeline.json`, `output/` и т.д.) не трогает.
 
-```bash
-# 1. Запустить ComfyUI (run_nvidia_gpu.bat). Команды ниже — из папки проекта;
-#    на Windows вместо «python scripts/comfy.py» пишите просто «comfy»
+## Песня и тайминги
 
-# 2. Герой: выбрать лучшего, сохранить как refs/hero.png
-python scripts/comfy.py character single --variants 8
+143.55 BPM, такт = 1.672 с. Окно клипа: 0:26.7–1:26.9 песни (36 тактов = 60.2 с): подводка 8 тактов, дроп 16, спад 12.
 
-# 3. Герой во всех сценах + фоны сцен без героя
-python scripts/comfy.py place refs/hero.png
-python scripts/comfy.py keyframes --only s02 s09 s12
-
-# 4. Лучшие кадры положить в selects/ (s01.png, s02.png, ...), дальше по технике сцены:
-python scripts/comfy.py boil selects/s01.png --scene s01
-python scripts/comfy.py kontext selects/s02.png --preset daycycle
-python scripts/comfy.py kontext selects/s03.png --preset clean-plate
-
-# 5. Всё готовое — через единый фильтр
-python scripts/unify.py output/boil/s01 final/s01
+Правите шоты в `prompts/timeline.json` (название и длина в тактах), потом:
 ```
-
-Результаты генерации складываются в `output/` (в git не попадает). Песню в репозиторий не кладём: он публичный.
-
-Аниматик (карточки сцен под музыку):
-```bash
-python scripts/timing.py --audio песня.mp3 --animatic
+timing --audio путь\к\песне.mp3 --animatic
 ```
+Получите `docs/timing.md` с номерами кадров и `output/animatic.mp4` — карточки шотов под музыку. Для аниматика нужен ffmpeg в PATH.
 
-## Статус
-
-- [x] Стиль и палитра
-- [x] Черновая раскадровка
-- [x] Скрипты генерации и стилизации
-- [x] Песня: 143.55 BPM, окно 0:26.7–1:26.9, тайминги под бит
-- [x] Дизайн героя
-- [ ] Генерация героя и утверждение `refs/hero.png`
-- [ ] Генерация сцен и отбор
-- [ ] Анимация, монтаж
+Песни в репозитории нет: он публичный.

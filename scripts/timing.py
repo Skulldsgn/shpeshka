@@ -18,9 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TL = json.loads((ROOT / "prompts" / "timeline.json").read_text(encoding="utf-8"))
-SC = {s["id"]: s for s in json.loads((ROOT / "prompts" / "scenes.json").read_text(encoding="utf-8"))["scenes"]}
 FPS = 24
-TECH = {"boil": "кипящая линия", "daycycle": "смена света", "parallax": "параллакс", "wan": "Wan"}
 COLORS = ["#6B7040", "#A4482B", "#3E6B68", "#8A8577", "#232F3E", "#E3A93B"]
 
 
@@ -63,14 +61,12 @@ def write_md(sh, total):
             cur = s["section"]
             note = next(x["note"] for x in TL["sections"] if x["name"] == cur)
             lines += ["", f"## {cur}", "", note, "",
-                      "| # | Клип | Песня | Длит. | Кадры (24 fps) | Сцена | Герой | Приём |",
-                      "|---|---|---|---|---|---|---|---|"]
-        sc = SC[s["id"]]
+                      "| # | Шот | Тактов | Клип | Песня | Длит. | Кадры (24 fps) |",
+                      "|---|---|---|---|---|---|---|"]
         n = sh.index(s) + 1
         lines.append(
-            f"| {n} | {ts(s['start'])} | {ts(TL['song_start'] + s['start'])} | {s['end'] - s['start']:.2f} с "
-            f"| {s['f_start']}–{s['f_end'] - 1} ({s['f_end'] - s['f_start']}) | {s['id']} {sc['title']} "
-            f"| {'да' if sc['hero'] else '—'} | {TECH[sc['technique']]} |"
+            f"| {n} | {s['id']} | {s['bars']:g} | {ts(s['start'])} | {ts(TL['song_start'] + s['start'])} "
+            f"| {s['end'] - s['start']:.2f} с | {s['f_start']}–{s['f_end'] - 1} ({s['f_end'] - s['f_start']}) |"
         )
     p = ROOT / "docs" / "timing.md"
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -88,9 +84,7 @@ def cut_audio(src, total, out):
 def card(s, n, path):
     from PIL import Image, ImageDraw, ImageFont
     w, h = 1080, 1920
-    sc = SC[s["id"]]
-    col = COLORS[int(s["id"][1:]) % len(COLORS)]
-    img = Image.new("RGB", (w, h), col)
+    img = Image.new("RGB", (w, h), COLORS[(n - 1) % len(COLORS)])
     d = ImageDraw.Draw(img)
 
     def font(size):
@@ -105,10 +99,8 @@ def card(s, n, path):
     d.rectangle([0, 0, w, 230], fill=ink)
     d.rectangle([0, h - 380, w, h], fill=ink)  # зона интерфейса соцсетей
     d.text((60, 70), f"#{n}  {s['section']}", font=font(64), fill=paper)
-    d.text((80, 620), s["id"], font=font(260), fill=paper)
-    d.text((80, 920), sc["title"], font=font(96), fill=paper)
-    d.text((80, 1060), TECH[sc["technique"]] + ("  ·  герой" if sc["hero"] else ""), font=font(56), fill=paper)
-    d.text((80, 1160), f"{s['bars']} такт(а) · {s['end'] - s['start']:.2f} с", font=font(56), fill=paper)
+    d.text((80, 760), s["id"], font=font(150), fill=paper)
+    d.text((80, 980), f"{s['bars']:g} такт(а) · {s['end'] - s['start']:.2f} с", font=font(64), fill=paper)
     d.text((60, h - 300), "зона интерфейса TikTok / Reels", font=font(44), fill="#8A8577")
     img.save(path)
 
