@@ -17,6 +17,7 @@
 | `prompts/timeline.json` | монтажная сетка в тактах |
 | `scripts/timing.py` | пересчёт таймингов, нарезка песни, аниматик |
 | `scripts/comfy.py` | пакетная генерация через API ComfyUI (ключевые кадры, кипящая линия, Kontext) |
+| `comfyui_node/` | ноды ComfyUI «Спешка: промпт сцены» и «Спешка: стиль» |
 | `scripts/unify.py` | приводит любые кадры к единому стилю: палитра, полутона, бумага, зерно |
 | `post/shpeshka_palette.cube` | LUT палитры для DaVinci Resolve |
 | `workflows/*_api.json` | графы ComfyUI в формате API (для справки) |
@@ -27,7 +28,10 @@
 
 1. Скачайте `setup_shpeshka.bat` и запустите двойным кликом. В начале файла прописаны пути `D:\AI\ComfyUI_windows_portable` и `D:\AI\shpeshka`; если у вас другие, поправьте их в Блокноте.
 2. Установщик скачает проект, сам найдёт модели Flux в ComfyUI, пропишет их в `config.json` и создаст команды `comfy`, `unify`, `timing`. Python ставить не нужно: используется встроенный в ComfyUI.
-3. Повторный запуск установщика обновляет проект, не трогая ваш `config.json` и результаты.
+3. Ставит в ComfyUI две ноды (меню **Спешка**, после перезапуска ComfyUI):
+   - **Спешка: промпт сцены** — выбор сцены или героя из раскадровки, стилевой хвост дописывается сам; вместо обычного CLIP Text Encode.
+   - **Спешка: стиль** — палитра, полутона, бумага, зерно; ставится перед Save Image. Это то же самое, что `unify.py`.
+4. Повторный запуск установщика обновляет проект, не трогая ваш `config.json` и результаты.
 
 Если отдельного VAE нет, он берётся из чекпоинта Schnell «всё в одном». Если нет и его, скачайте `ae.safetensors` из [FLUX.1-schnell на Hugging Face](https://huggingface.co/black-forest-labs/FLUX.1-schnell/tree/main) в `ComfyUI\models\vae` и запустите `detect_models.bat`.
 
