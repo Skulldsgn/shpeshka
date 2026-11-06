@@ -4,10 +4,10 @@
 import re
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
-# Пример палитры. Это только значение по умолчанию: в ноде и в unify.py задаётся своя.
-DEFAULT_PALETTE = "#1B1A17, #E8DCC0, #6B7040, #A4482B, #3E6B68, #E3A93B, #8A8577, #232F3E"
+# Значения по умолчанию — под силуэты на бумаге. В ноде и в unify.py всё задаётся своё.
+DEFAULT_PALETTE = "#111111, #E9DFC8"
 LUMA = np.array([0.30, 0.59, 0.11], dtype=np.float32)
 
 
@@ -36,6 +36,21 @@ def palette_map(rgb, palette, strength=0.7, softness=0.06):
     mapped = k @ palette
     mapped = np.clip(mapped + (flat @ LUMA - mapped @ LUMA)[:, None] * 0.5, 0, 1)
     return (flat * (1 - strength) + mapped * strength).reshape(rgb.shape)
+
+
+def ink_fill(rgb, ink, threshold, fill_px=21, soft=0.05):
+    """Всё темнее порога заливается сплошной тушью.
+    fill_px: светлые детали внутри тёмных масс тоньше этого размера (блики, черты лица) тоже заливаются."""
+    if threshold <= 0:
+        return rgb
+    lum = luminance(rgb)
+    m = np.clip((threshold - lum) / soft + 0.5, 0, 1)
+    if fill_px > 1:
+        k = int(fill_px) | 1  # фильтру нужен нечётный размер
+        mi = Image.fromarray((m * 255).astype(np.uint8))
+        closed = mi.filter(ImageFilter.MaxFilter(k)).filter(ImageFilter.MinFilter(k))  # морфологическое закрытие
+        m = np.maximum(m, np.asarray(closed, np.float32) / 255.0)
+    return rgb * (1 - m[..., None]) + ink * m[..., None]
 
 
 # ---------- фактуры ----------
@@ -87,16 +102,17 @@ def grain_and_paper(rgb, seed, grain, paper, paper_tint):
     return np.clip(out, 0, 1)
 
 
-def stylize(rgb, palette_text=DEFAULT_PALETTE, strength=0.7, dot=8, offset=2,
-            grain=0.035, paper=0.04, seed=0):
+def stylize(rgb, palette_text=DEFAULT_PALETTE, strength=0.9, dot=0, offset=0,
+            grain=0.02, paper=0.035, seed=0, ink_threshold=0.35, fill_px=21):
     """rgb: numpy (H, W, 3) float 0..1. Любой эффект выключается нулём, палитра — пустой строкой."""
     pal = parse_palette(palette_text)
-    rgb = palette_map(rgb.astype(np.float32), pal, strength)
+    # тушь = самый тёмный цвет палитры (или почти чёрный, если палитры нет)
+    ink = pal[np.argmin(pal @ LUMA)] if pal is not None else np.array([0.07, 0.07, 0.07], np.float32)
+    rgb = ink_fill(rgb.astype(np.float32), ink, ink_threshold, fill_px)
+    rgb = palette_map(rgb, pal, strength)
     if offset:
         rgb = misregister(rgb, offset, max(1, offset // 2))
     if dot > 0:
-        # точки цветом самого тёмного цвета палитры (или почти чёрным, если палитры нет)
-        ink = pal[np.argmin(pal @ LUMA)] if pal is not None else np.array([0.1, 0.1, 0.09], np.float32)
         rgb = halftone(rgb, ink, cell=dot)
     tint = pal[np.argmax(pal @ LUMA)] if pal is not None else None
     return grain_and_paper(rgb, seed, grain, paper, tint)

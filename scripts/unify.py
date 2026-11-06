@@ -6,7 +6,7 @@ unify.py — то же, что нода «Спешка: стиль», но дл�
 
 Примеры:
   python scripts/unify.py кадры/ результат/
-  python scripts/unify.py кадр.png результат/ --palette "#111111, #EEE4D0, #C0392B" --dot 0
+  python scripts/unify.py кадр.png результат/ --palette "#111111, #E9DFC8, #A4482B" --ink 0.4
   python scripts/unify.py --lut post/palette.cube --palette "#111111, #EEE4D0"   # LUT для DaVinci
   python scripts/unify.py --swatch palette.png --palette "..."                    # картинка палитры
 
@@ -56,11 +56,13 @@ def main():
     ap.add_argument("input", nargs="?", help="файл или папка с кадрами")
     ap.add_argument("output", nargs="?", help="папка для результата")
     ap.add_argument("--palette", default=DEFAULT_PALETTE, help="HEX-цвета через запятую, \"\" = без палитры")
-    ap.add_argument("--strength", type=float, default=0.7, help="сила палитры 0..1, 0 = выкл")
-    ap.add_argument("--dot", type=int, default=8, help="полутоновая ячейка в px, 0 = выкл")
-    ap.add_argument("--offset", type=int, default=2, help="сдвиг цвета от контура в px, 0 = выкл")
-    ap.add_argument("--grain", type=float, default=0.035, help="зерно, 0 = выкл")
-    ap.add_argument("--paper", type=float, default=0.04, help="бумага, 0 = выкл")
+    ap.add_argument("--strength", type=float, default=0.9, help="сила палитры 0..1, 0 = выкл")
+    ap.add_argument("--ink", type=float, default=0.35, help="порог заливки тушью, 0 = выкл")
+    ap.add_argument("--fill", type=int, default=21, help="заливать светлые детали внутри силуэтов меньше N px, 0 = выкл")
+    ap.add_argument("--paper", type=float, default=0.035, help="бумага, 0 = выкл")
+    ap.add_argument("--grain", type=float, default=0.02, help="зерно, 0 = выкл")
+    ap.add_argument("--dot", type=int, default=0, help="полутоновая ячейка в px, 0 = выкл")
+    ap.add_argument("--offset", type=int, default=0, help="сдвиг цвета от контура в px, 0 = выкл")
     ap.add_argument("--lut", help="записать .cube LUT палитры и выйти")
     ap.add_argument("--swatch", help="записать картинку палитры и выйти")
     a = ap.parse_args()
@@ -82,7 +84,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     for i, f in enumerate(files):
         rgb = np.asarray(Image.open(f).convert("RGB"), np.float32) / 255.0
-        rgb = stylize(rgb, a.palette, a.strength, a.dot, a.offset, a.grain, a.paper, i)
+        rgb = stylize(rgb, a.palette, a.strength, a.dot, a.offset, a.grain, a.paper, i, a.ink, a.fill)
         Image.fromarray((rgb * 255 + 0.5).astype(np.uint8)).save(out / (f.stem + ".png"))
         print(f"[{i + 1}/{len(files)}] {f.name}")
 

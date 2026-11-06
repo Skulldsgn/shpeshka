@@ -1,118 +1,38 @@
-# Заметки по стилю
+# Заметки по стилю: силуэты на бумаге
 
-> Справочник с идеями, ни на что в проекте не влияет. Берите то, что нравится, остальное игнорируйте.
+> Справочник с идеями, ни на что в проекте не влияет. Берите то, что нравится.
 
-Единый стиль держится на четырёх слоях. Каждый следующий страхует предыдущий:
+## Что делает стиль узнаваемым
 
-1. **Промпт**: одинаковый стилевой хвост и негатив во всех сценах.
-2. **Flux Kontext**: доводит «выбившиеся» кадры до эталона и делает вариации без перегенерации.
-3. **Пост-обработка** (нода «Спешка: стиль», `scripts/unify.py` или LUT в DaVinci): жёстко приводит каждый кадр к палитре, добавляет полутона, зерно и бумагу. Именно этот слой гарантирует, что разные генерации выглядят как один мультфильм.
-4. *(по желанию)* **Своя LoRA** на 15–20 лучших кадрах, когда наберётся материал.
+- Фигуры — сплошная тушь, без лиц и внутренних деталей. Всё читается через позу.
+- Фон — светлая бумага с лёгкой фактурой.
+- Глубина — через туман: чем дальше план, тем он светлее и ближе к цвету бумаги. Обычно хватает трёх планов: чёрный передний, серый средний, бледный дальний.
+- Позы динамичные и с ясным силуэтом: руки и ноги не прячутся за телом, наклон корпуса виден сразу.
+- По желанию один акцентный цвет (например, красный) на одной детали в кадре.
 
----
+## Слова, которые помогают в промпте
 
-## Палитра (8 цветов)
+`solid black silhouette`, `pure black fill, no highlights, no internal details`, `no faces`, `flat`, `aged cream paper background`, `subtle paper texture`, `distant layers fade into pale fog`, `strong readable pose`, `minimalist`, `high contrast`, `2D illustration`.
 
-| Роль | HEX | Где использовать |
+Мешают: `realistic`, `detailed`, `lighting`, `cinematic`, `3d` — с ними появляются блики и объём внутри силуэтов.
+
+## Нода «Спешка: стиль» под силуэты
+
+По умолчанию она уже настроена под этот стиль:
+
+| Параметр | Значение | Что делает |
 |---|---|---|
-| Чернила | `#1B1A17` | контуры, глубокие тени |
-| Бумага | `#E8DCC0` | светлые плоскости, небо днём |
-| Олива | `#6B7040` | одежда, стены, транспорт |
-| Ржавчина | `#A4482B` | акценты, кирпич, светофор |
-| Грязная бирюза | `#3E6B68` | холодные тени, стекло |
-| Натриевый жёлтый | `#E3A93B` | фонари, окна, тёплый свет |
-| Смог | `#8A8577` | асфальт, бетон, дымка |
-| Ночь | `#232F3E` | ночное небо, глубокий фон |
+| palette | `#111111, #E9DFC8` | тушь и бумага; третий цвет — акцент |
+| palette_strength | 0.9 | почти жёстко две краски, средние тона остаются для тумана |
+| ink_threshold | 0.35 | всё темнее заливается тушью; поднимите до 0.45, если силуэты сероватые |
+| fill_details | 21 | заливает блики и детали внутри силуэтов; увеличьте, если на крупных планах остаются лица |
+| paper / grain | 0.035 / 0.02 | лёгкая бумага и зерно |
+| halftone / offset | 0 / 0 | выключены, для силуэтов не нужны |
 
-Палитра в картинке: `docs/palette.png`. Правило: в кадре 1 тёплый источник света (натриевый жёлтый) против холодных теней (бирюза или ночь). Чистого белого и чистого чёрного нет.
+`fill_details` заливает и узкие светлые щели между близко стоящими силуэтами. Если фигуры слипаются, уменьшите значение.
 
-## Линия и форма
+## Анимация силуэтов
 
-- Жирный чернильный контур, неровный, будто тушью. Толщина везде одинаковая.
-- Тени плоские, одним тоном, без градиентов. Внутри теней штриховка или полутона.
-- Фигуры вытянутые и угловатые, плечи вперёд, головы маленькие. **Лиц крупно не показываем**: глаза пустые или тёмные, черты условные.
-- Архитектура слегка кривая, перспектива преувеличена (широкий угол, низкая точка).
-
-## Фактура
-
-- Бумажное зерно и потёртость на весь кадр.
-- Полутоновые точки в средних тонах и тенях.
-- Лёгкая несовмещённость печати: тень цвета чуть съезжает от контура (делается в `unify.py`).
-
-## Композиция 9:16
-
-- Главное держим в центральных 60% по высоте: сверху и снизу интерфейс TikTok и Reels.
-- Горизонт низко или очень высоко, без «середины».
-- В каждом кадре одна ясная вещь: поток, фигура или объект.
-
----
-
-## Пример стилевого хвоста промпта
-
-```
-, 2D hand-drawn cartoon illustration, gritty urban comic art, thick uneven black ink outlines,
-flat cel shading with hard-edged shadows, halftone dot shading, muted palette of olive green,
-rust red, dirty teal, sodium yellow and smoggy grey, warm streetlight against cool shadows,
-aged paper texture, slightly crooked exaggerated perspective, lanky angular figures with hollow eyes,
-vertical composition
-```
-
-## Негатив
-
-Flux Schnell с cfg 1 негатив почти игнорирует, поэтому «запреты» лучше формулировать в позитиве (`flat`, `hand-drawn`). Если используете сэмплер с настоящим CFG, вот негатив:
-
-```
-photorealistic, photo, 3d render, CGI, glossy, smooth gradients, anime, chibi, cute,
-detailed realistic faces, text, watermark, logo, signature, pure white, oversaturated neon
-```
-
-Не используем: персонажей и логотип Gorillaz, имена художников в промпте. Стиль описываем признаками, а не чужими именами.
-
----
-
-## Flux Kontext: готовые инструкции
-
-Kontext понимает команды на английском. Главное правило: всегда добавлять, что сохранить.
-
-**Привести выбившийся кадр к стилю:**
-```
-Redraw this image as a flat 2D hand-drawn comic illustration with thick uneven black ink outlines,
-hard-edged flat shadows, halftone dots and aged paper texture, using only muted olive, rust,
-dirty teal, sodium yellow and smoggy grey colors. Keep the composition, camera angle and all objects
-exactly the same.
-```
-
-**Смена времени суток (приём 2, таймлапс):**
-```
-Change the time of day to [early morning with cold blue light | harsh noon sun with short shadows |
-orange sunset with long shadows | night with glowing sodium streetlights and lit windows].
-Keep the composition, buildings, objects, line art and drawing style exactly the same.
-```
-
-**Чистый фон для параллакса (приём 3):**
-```
-Remove all people and cars from the scene and fill the space with the street behind them.
-Keep everything else, the lighting and the drawing style exactly the same.
-```
-
-**Отделить персонажа:**
-```
-Remove the background completely and place the figure on a plain flat white background.
-Keep the figure, its pose, outlines and colors exactly the same.
-```
-После этого фон вырезается нодой RMBG / BiRefNet.
-
-**Вариация для «кипящей линии»** (если img2img на Schnell даёт слишком разные кадры):
-```
-Redraw the same image with slightly different hand-drawn ink lines, as the next frame of
-a hand-drawn animation. Keep everything else exactly the same.
-```
-
-### Kontext + эталон стиля
-
-Выберите 1 лучший кадр как «эталон» (`refs/style_master.png`). Чтобы подтянуть другой кадр к нему, склейте их нодой **Image Stitch** (эталон слева, целевой справа) и дайте команду:
-```
-Redraw the right image in exactly the same drawing style, line weight, colors and texture
-as the left image. Keep the content and composition of the right image.
-```
-Потом обрежьте правую половину. Работает не всегда идеально, но хорошо выравнивает линию и палитру.
+- **Кипящая линия**: несколько почти одинаковых кадров (img2img с низким denoise или Kontext), чередовать на 8–12 fps. На силуэте дрожит только контур, и это выглядит рисованно.
+- **Параллакс**: силуэты легко вырезаются, три плана тумана сами просятся в слои.
+- **Таймлапс**: меняйте тон бумаги или тумана между кадрами (утро — холоднее, вечер — теплее), а силуэты оставляйте.
