@@ -6,6 +6,17 @@ comfy.py — пакетная генерация «Спешки» через API
 Сначала запустите ComfyUI и проверьте имена моделей в config.json.
 
 Команды:
+  character  — герой клипа (Flux Schnell): лист с тремя видами или одна фигура в полный рост
+      python scripts/comfy.py character sheet --variants 6
+      python scripts/comfy.py character single --variants 8
+
+  poses      — библиотека поз утверждённого героя (Kontext)
+      python scripts/comfy.py poses refs/hero.png
+
+  place      — герой в сценах раскадровки (Kontext): все сцены с героем или выбранные
+      python scripts/comfy.py place refs/hero.png
+      python scripts/comfy.py place refs/hero.png --only s04 s13 --variants 4
+
   keyframes  — ключевые кадры сцен из prompts/scenes.json (Flux Schnell)
       python scripts/comfy.py keyframes                 # все сцены, по 4 варианта
       python scripts/comfy.py keyframes --only s03 s13 --variants 8
@@ -36,6 +47,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CFG = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
 SCENES = json.loads((ROOT / "prompts" / "scenes.json").read_text(encoding="utf-8"))
+CHAR = json.loads((ROOT / "prompts" / "character.json").read_text(encoding="utf-8"))
 
 KEEP = " Keep the composition, camera angle, objects, line art and drawing style exactly the same."
 PRESETS = {
@@ -87,13 +99,13 @@ def text_loaders(g):
     return model, clip, vae
 
 
-def graph_txt2img(prompt, seed, batch, prefix):
+def graph_txt2img(prompt, seed, batch, prefix, width=None, height=None):
     g = {}
     model, clip, vae = text_loaders(g)
     g["10"] = {"class_type": "CLIPTextEncode", "inputs": {"clip": clip, "text": prompt}}
     g["11"] = {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["10", 0]}}
     g["12"] = {"class_type": "EmptySD3LatentImage",
-               "inputs": {"width": CFG["width"], "height": CFG["height"], "batch_size": batch}}
+               "inputs": {"width": width or CFG["width"], "height": height or CFG["height"], "batch_size": batch}}
     g["13"] = {"class_type": "KSampler", "inputs": {
         "model": model, "positive": ["10", 0], "negative": ["11", 0], "latent_image": ["12", 0],
         "seed": seed, "steps": CFG["schnell"]["steps"], "cfg": 1.0,
@@ -249,6 +261,43 @@ def cmd_kontext(a):
             run(graph_kontext(name, text, base_seed + v, f"shpeshka/{stem}_{tag}_{i:02d}"), out)
 
 
+def cmd_character(a):
+    out = ROOT / CFG["output_dir"] / "character"
+    seed = a.seed if a.seed is not None else random.randint(0, 2**32 - 1)
+    if a.kind == "sheet":
+        # лист с тремя видами: горизонтальный кадр
+        g = graph_txt2img(full_prompt(CHAR["sheet"]), seed, a.variants, "shpeshka/hero_sheet",
+                          width=CFG["height"], height=CFG["width"])
+    else:
+        g = graph_txt2img(full_prompt(CHAR["single"]), seed, a.variants, "shpeshka/hero_single")
+    run(g, out)
+
+
+def cmd_poses(a):
+    name = upload(a.image)
+    seed = a.seed if a.seed is not None else random.randint(0, 2**32 - 1)
+    out = ROOT / CFG["output_dir"] / "character" / "poses"
+    for i, text in enumerate(CHAR["poses"]):
+        print(f"[{i + 1}/{len(CHAR['poses'])}] {text[:70]}…")
+        for v in range(a.variants):
+            run(graph_kontext(name, text + CHAR["keep"], seed + v, f"shpeshka/pose_{i:02d}"), out)
+
+
+def cmd_place(a):
+    name = upload(a.image)
+    todo = [scene(i) for i in a.only] if a.only else [s for s in SCENES["scenes"] if s["hero"]]
+    seed = a.seed if a.seed is not None else random.randint(0, 2**32 - 1)
+    for s in todo:
+        if not s["hero"]:
+            print(f"{s['id']}: сцена без героя, пропускаю")
+            continue
+        print(f"{s['id']} {s['title']}")
+        text = s["hero"] + CHAR["keep"]
+        for v in range(a.variants):
+            run(graph_kontext(name, text, seed + v, f"shpeshka/{s['id']}_hero"),
+                ROOT / CFG["output_dir"] / "hero_scenes" / s["id"])
+
+
 def cmd_export(_):
     d = ROOT / "workflows"
     d.mkdir(exist_ok=True)
@@ -289,6 +338,25 @@ def main():
     p.add_argument("--variants", type=int, default=1, help="сколько вариантов на каждую команду")
     p.add_argument("--seed", type=int)
     p.set_defaults(fn=cmd_kontext)
+
+    p = sub.add_parser("character")
+    p.add_argument("kind", choices=["sheet", "single"])
+    p.add_argument("--variants", type=int, default=6)
+    p.add_argument("--seed", type=int)
+    p.set_defaults(fn=cmd_character)
+
+    p = sub.add_parser("poses")
+    p.add_argument("image", help="утверждённый герой в полный рост (hero_single)")
+    p.add_argument("--variants", type=int, default=2)
+    p.add_argument("--seed", type=int)
+    p.set_defaults(fn=cmd_poses)
+
+    p = sub.add_parser("place")
+    p.add_argument("image", help="утверждённый герой в полный рост (hero_single)")
+    p.add_argument("--only", nargs="*", help="id сцен; по умолчанию все сцены с героем")
+    p.add_argument("--variants", type=int, default=3)
+    p.add_argument("--seed", type=int)
+    p.set_defaults(fn=cmd_place)
 
     p = sub.add_parser("export")
     p.set_defaults(fn=cmd_export)

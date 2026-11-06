@@ -5,6 +5,7 @@
 ## Общий порядок работы
 
 ```
+0. герой      → refs/hero.png (docs/character.md), потом place для сцен с героем
 1. keyframes  → 4–8 вариантов на сцену (Schnell, ~секунды на кадр)
 2. отбор      → лучший кадр сцены в  selects/sNN.png
 3. эталон     → самый удачный кадр всего клипа в  refs/style_master.png

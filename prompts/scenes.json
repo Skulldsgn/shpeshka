@@ -1,104 +1,96 @@
 {
-  "_note": "Черновая раскадровка без таймингов. Тайминги расставим под бит, когда будет песня. technique: boil = кипящая линия, daycycle = таймлапс сменой света (Kontext), parallax = слои, wan = точечно через видео-модель.",
+  "_note": "technique: boil = кипящая линия, daycycle = таймлапс сменой света (Kontext), parallax = слои, wan = точечно через видео-модель. hero = как герой появляется в сцене (инструкция для Kontext 'place'); null = сцена без героя.",
   "style_suffix": ", 2D hand-drawn cartoon illustration, gritty urban comic art, thick uneven black ink outlines, flat cel shading with hard-edged shadows, halftone dot shading, muted palette of olive green, rust red, dirty teal, sodium yellow and smoggy grey, warm streetlight against cool shadows, aged paper texture, slightly crooked exaggerated perspective, lanky angular figures with hollow eyes, vertical composition",
   "scenes": [
     {
-      "id": "s01",
-      "title": "Будильник",
-      "technique": "boil",
+      "id": "s01", "title": "Будильник", "technique": "boil",
       "prompt": "extreme close-up of an old wind-up alarm clock ringing on a cluttered bedside table at dawn, bells blurred with vibration, cold blue window light",
+      "hero": "Show only this man's big hand slamming down on a ringing old wind-up alarm clock on a cluttered bedside table at dawn, extreme close-up, cold blue window light.",
       "motion": "кипящая линия + тряска кадра в монтаже на каждый удар"
     },
     {
-      "id": "s02",
-      "title": "Небо над крышами",
-      "technique": "daycycle",
+      "id": "s02", "title": "Небо над крышами", "technique": "daycycle",
       "prompt": "low angle view of crooked apartment block rooftops with antennas and wires against a wide sky with streaks of clouds",
-      "motion": "4–8 состояний света через Kontext, склейка по 3–4 кадра"
+      "hero": null,
+      "motion": "4–8 состояний света через Kontext, склейка по 2–3 кадра"
     },
     {
-      "id": "s03",
-      "title": "Переход",
-      "technique": "parallax",
+      "id": "s03", "title": "Переход", "technique": "parallax",
       "prompt": "busy city crosswalk seen from above at an angle, crowd of lanky faceless people rendered as smeared streaks of motion, one traffic light glowing red",
+      "hero": "Show this exact man rushing across a busy city crosswalk seen from above at an angle, among a crowd of lanky faceless people smeared into streaks of motion, a red traffic light glowing.",
       "motion": "слой толпы едет быстро, фон медленно; светофор мигает сменой кадров"
     },
     {
-      "id": "s04",
-      "title": "Эскалатор",
-      "technique": "parallax",
+      "id": "s04", "title": "Эскалатор", "technique": "parallax",
       "prompt": "endless tall metro escalator going up into darkness, rows of identical tired commuters holding phones, glowing lamp posts along the side",
+      "hero": "Show this exact man standing on an endless tall metro escalator going up into darkness, among rows of identical tired commuters holding phones, glowing lamp posts along the side.",
       "motion": "бесконечный скролл вверх: слой эскалатора зациклен"
     },
     {
-      "id": "s05",
-      "title": "Вагон метро",
-      "technique": "wan",
+      "id": "s05", "title": "Вагон метро", "technique": "wan",
       "prompt": "inside a metro car, frozen passengers staring at phones, outside the windows the tunnel lights stretch into long streaks of speed",
+      "hero": "Show this exact man standing inside a crowded metro car holding the handrail and staring at his phone, outside the windows tunnel lights stretch into long streaks of speed.",
       "motion": "Wan I2V: двигаются только огни за окном, пассажиры статичны"
     },
     {
-      "id": "s06",
-      "title": "Бумаги",
-      "technique": "boil",
+      "id": "s06", "title": "Бумаги", "technique": "boil",
       "prompt": "office desk buried under towering stacks of paper and sticky notes, cold coffee mug, computer monitor glow, window shadows on the desk",
+      "hero": "Show this exact man sitting at an office desk buried under towering stacks of paper and sticky notes, only his tired face and spiky hair visible between the stacks, monitor glow on his face.",
       "motion": "кипящая линия + стопки растут сменой кадров (Kontext: 'make the paper stacks taller')"
     },
     {
-      "id": "s07",
-      "title": "Тени по столу",
-      "technique": "daycycle",
+      "id": "s07", "title": "Тени по столу", "technique": "daycycle",
       "prompt": "top-down view of an office desk with a keyboard and a single mug, long window frame shadows falling across it",
+      "hero": "Top-down view of an office desk with a keyboard and a single mug, this man's big hands with the chunky wristwatch typing on the keyboard, long window frame shadows falling across the desk.",
       "motion": "тени бегут по столу: смена времени суток через Kontext"
     },
     {
-      "id": "s08",
-      "title": "Кофе",
-      "technique": "boil",
+      "id": "s08", "title": "Кофе", "technique": "boil",
       "prompt": "close-up of a paper coffee cup on a counter, steam curling up, hands of a barista reaching in from the edge of the frame",
+      "hero": "Close-up of this man's big hand with the chunky wristwatch grabbing a paper coffee cup from a cafe counter, steam curling up.",
       "motion": "кофе полный, пустой, полный — 3 кадра через Kontext, быстро по биту"
     },
     {
-      "id": "s09",
-      "title": "Трасса",
-      "technique": "wan",
+      "id": "s09", "title": "Трасса", "technique": "wan",
       "prompt": "highway overpass at night, cars turned into long ribbons of red and yellow light, dark city silhouettes behind",
+      "hero": null,
       "motion": "Wan I2V: световые ленты текут, 2 секунды максимум"
     },
     {
-      "id": "s10",
-      "title": "Календарь",
-      "technique": "boil",
+      "id": "s10", "title": "Календарь", "technique": "boil",
       "prompt": "tear-off wall calendar with pages flying off into the air, cracked wall, single bare light bulb",
+      "hero": "Show this exact man standing in front of a tear-off wall calendar whose pages are flying off into the air around him, cracked wall, single bare light bulb.",
       "motion": "листы слетают: 4–6 кадров через Kontext с разным количеством листов в воздухе"
     },
     {
-      "id": "s11",
-      "title": "Кухня",
-      "technique": "boil",
+      "id": "s11", "title": "Кухня", "technique": "boil",
       "prompt": "tiny cramped apartment kitchen at night, microwave glowing, a plate of food, a figure eating while standing and looking at a phone",
+      "hero": "Show this exact man in a tiny cramped apartment kitchen at night, eating from a plate while standing and looking at his phone, microwave glowing.",
       "motion": "еда появляется и исчезает сменой кадров"
     },
     {
-      "id": "s12",
-      "title": "Окна дома",
-      "technique": "daycycle",
+      "id": "s12", "title": "Окна дома", "technique": "daycycle",
       "prompt": "facade of a huge apartment block with hundreds of identical windows, each with a tiny silhouette inside",
+      "hero": null,
       "motion": "окна зажигаются и гаснут: Kontext 'turn on the lights in random windows'"
     },
     {
-      "id": "s13",
-      "title": "Тот, кто остановился",
-      "technique": "parallax",
+      "id": "s13", "title": "Остановился", "technique": "parallax",
       "prompt": "one lanky figure standing perfectly still in the middle of a rushing crowd that blurs into streaks around him, he looks up at the sky",
-      "motion": "кульминация: фигура статична и резкая, толпа летит. Можно замедлить музыку/монтаж"
+      "hero": "Show this exact man standing perfectly still in the middle of a rushing city crowd that blurs into streaks of motion around him, his arms hanging down, he looks up at the sky.",
+      "motion": "кульминация: герой резкий и неподвижный, толпа летит; на спаде музыки толпа замедляется"
     },
     {
-      "id": "s14",
-      "title": "Снова будильник",
-      "technique": "boil",
+      "id": "s15", "title": "Тишина", "technique": "daycycle",
+      "prompt": "an empty city street at dusk, a single lanky figure seen from behind standing alone, long shadow, birds on the wires",
+      "hero": "Show this exact man from behind standing alone in an empty city street at dusk, long shadow, birds on the wires, he lets his phone hang loosely in his hand.",
+      "motion": "медленная смена света сумерки → ночь, едва заметный параллакс; кипящая линия очень мягкая"
+    },
+    {
+      "id": "s14", "title": "Снова будильник", "technique": "boil",
       "prompt": "extreme close-up of an old wind-up alarm clock ringing on a cluttered bedside table at dawn, bells blurred with vibration, cold blue window light",
-      "motion": "повтор s01 для лупа: финал переходит в начало"
+      "hero": "Show only this man's big hand reaching toward a ringing old wind-up alarm clock on a cluttered bedside table at dawn, extreme close-up, cold blue window light.",
+      "motion": "повтор начала для лупа: последний кадр стыкуется с первым"
     }
   ]
 }
