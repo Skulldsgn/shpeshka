@@ -1,0 +1,104 @@
+{
+  "_note": "Черновая раскадровка без таймингов. Тайминги расставим под бит, когда будет песня. technique: boil = кипящая линия, daycycle = таймлапс сменой света (Kontext), parallax = слои, wan = точечно через видео-модель.",
+  "style_suffix": ", 2D hand-drawn cartoon illustration, gritty urban comic art, thick uneven black ink outlines, flat cel shading with hard-edged shadows, halftone dot shading, muted palette of olive green, rust red, dirty teal, sodium yellow and smoggy grey, warm streetlight against cool shadows, aged paper texture, slightly crooked exaggerated perspective, lanky angular figures with hollow eyes, vertical composition",
+  "scenes": [
+    {
+      "id": "s01",
+      "title": "Будильник",
+      "technique": "boil",
+      "prompt": "extreme close-up of an old wind-up alarm clock ringing on a cluttered bedside table at dawn, bells blurred with vibration, cold blue window light",
+      "motion": "кипящая линия + тряска кадра в монтаже на каждый удар"
+    },
+    {
+      "id": "s02",
+      "title": "Небо над крышами",
+      "technique": "daycycle",
+      "prompt": "low angle view of crooked apartment block rooftops with antennas and wires against a wide sky with streaks of clouds",
+      "motion": "4–8 состояний света через Kontext, склейка по 3–4 кадра"
+    },
+    {
+      "id": "s03",
+      "title": "Переход",
+      "technique": "parallax",
+      "prompt": "busy city crosswalk seen from above at an angle, crowd of lanky faceless people rendered as smeared streaks of motion, one traffic light glowing red",
+      "motion": "слой толпы едет быстро, фон медленно; светофор мигает сменой кадров"
+    },
+    {
+      "id": "s04",
+      "title": "Эскалатор",
+      "technique": "parallax",
+      "prompt": "endless tall metro escalator going up into darkness, rows of identical tired commuters holding phones, glowing lamp posts along the side",
+      "motion": "бесконечный скролл вверх: слой эскалатора зациклен"
+    },
+    {
+      "id": "s05",
+      "title": "Вагон метро",
+      "technique": "wan",
+      "prompt": "inside a metro car, frozen passengers staring at phones, outside the windows the tunnel lights stretch into long streaks of speed",
+      "motion": "Wan I2V: двигаются только огни за окном, пассажиры статичны"
+    },
+    {
+      "id": "s06",
+      "title": "Бумаги",
+      "technique": "boil",
+      "prompt": "office desk buried under towering stacks of paper and sticky notes, cold coffee mug, computer monitor glow, window shadows on the desk",
+      "motion": "кипящая линия + стопки растут сменой кадров (Kontext: 'make the paper stacks taller')"
+    },
+    {
+      "id": "s07",
+      "title": "Тени по столу",
+      "technique": "daycycle",
+      "prompt": "top-down view of an office desk with a keyboard and a single mug, long window frame shadows falling across it",
+      "motion": "тени бегут по столу: смена времени суток через Kontext"
+    },
+    {
+      "id": "s08",
+      "title": "Кофе",
+      "technique": "boil",
+      "prompt": "close-up of a paper coffee cup on a counter, steam curling up, hands of a barista reaching in from the edge of the frame",
+      "motion": "кофе полный, пустой, полный — 3 кадра через Kontext, быстро по биту"
+    },
+    {
+      "id": "s09",
+      "title": "Трасса",
+      "technique": "wan",
+      "prompt": "highway overpass at night, cars turned into long ribbons of red and yellow light, dark city silhouettes behind",
+      "motion": "Wan I2V: световые ленты текут, 2 секунды максимум"
+    },
+    {
+      "id": "s10",
+      "title": "Календарь",
+      "technique": "boil",
+      "prompt": "tear-off wall calendar with pages flying off into the air, cracked wall, single bare light bulb",
+      "motion": "листы слетают: 4–6 кадров через Kontext с разным количеством листов в воздухе"
+    },
+    {
+      "id": "s11",
+      "title": "Кухня",
+      "technique": "boil",
+      "prompt": "tiny cramped apartment kitchen at night, microwave glowing, a plate of food, a figure eating while standing and looking at a phone",
+      "motion": "еда появляется и исчезает сменой кадров"
+    },
+    {
+      "id": "s12",
+      "title": "Окна дома",
+      "technique": "daycycle",
+      "prompt": "facade of a huge apartment block with hundreds of identical windows, each with a tiny silhouette inside",
+      "motion": "окна зажигаются и гаснут: Kontext 'turn on the lights in random windows'"
+    },
+    {
+      "id": "s13",
+      "title": "Тот, кто остановился",
+      "technique": "parallax",
+      "prompt": "one lanky figure standing perfectly still in the middle of a rushing crowd that blurs into streaks around him, he looks up at the sky",
+      "motion": "кульминация: фигура статична и резкая, толпа летит. Можно замедлить музыку/монтаж"
+    },
+    {
+      "id": "s14",
+      "title": "Снова будильник",
+      "technique": "boil",
+      "prompt": "extreme close-up of an old wind-up alarm clock ringing on a cluttered bedside table at dawn, bells blurred with vibration, cold blue window light",
+      "motion": "повтор s01 для лупа: финал переходит в начало"
+    }
+  ]
+}
