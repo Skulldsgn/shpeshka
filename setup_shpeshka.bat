@@ -60,7 +60,13 @@ set "NODE=%COMFY%\ComfyUI\custom_nodes\shpeshka"
 robocopy "%DEST%\comfyui_node" "%NODE%" /E /NFL /NDL /NJH /NJS /NP >nul
 robocopy "%DEST%\prompts" "%NODE%\prompts" /E /NFL /NDL /NJH /NJS /NP >nul
 > "%NODE%\project_path.txt" echo %DEST%
-echo     Готово. Перезапустите ComfyUI, ноды будут в меню «Спешка».
+"%PY%" "%DEST%\scripts\make_ui_workflows.py" >nul
+set "WFDIR=%COMFY%\ComfyUI\user\default\workflows\shpeshka"
+mkdir "%WFDIR%" 2>nul
+copy /Y "%DEST%\workflows\1_kadr_schnell.json" "%WFDIR%\" >nul
+copy /Y "%DEST%\workflows\2_kontext_pravka.json" "%WFDIR%\" >nul
+echo     Готово. Перезапустите ComfyUI: ноды в меню «Спешка»,
+echo     готовые графы — на панели Workflows в папке shpeshka.
 
 echo [5/5] Создаю ярлыки команд...
 (

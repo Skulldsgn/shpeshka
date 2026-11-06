@@ -32,7 +32,8 @@ def _load():
     return scenes, char
 
 
-MODES = ["сцена (Schnell)", "сцена с героем (Kontext)", "герой: лист (Schnell)", "герой: в рост (Schnell)"]
+MODES = ["сцена (Schnell)", "сцена с героем (Kontext)", "герой: лист (Schnell)", "герой: в рост (Schnell)",
+         "только своя команда (extra)"]
 
 
 class ShpeshkaScenePrompt:
@@ -70,6 +71,12 @@ class ShpeshkaScenePrompt:
         sc = next(s for s in scenes["scenes"] if s["id"] == sid)
         suffix = scenes["style_suffix"] if add_style else ""
 
+        if mode == MODES[4]:
+            if not extra.strip():
+                raise ValueError("Режим «только своя команда»: напишите текст в поле extra.")
+            text = extra.strip() + (suffix if add_style else "")
+            import nodes
+            return (nodes.CLIPTextEncode().encode(clip, text)[0], text)
         if mode == MODES[1]:
             if not sc.get("hero"):
                 raise ValueError(f"В сцене {sid} нет героя — выберите режим «сцена (Schnell)».")
@@ -102,7 +109,7 @@ class ShpeshkaStyle:
                                    "tooltip": "сдвиг цвета от контура в px, 0 = выкл"}),
                 "grain": ("FLOAT", {"default": 0.035, "min": 0.0, "max": 0.2, "step": 0.005}),
                 "paper": ("FLOAT", {"default": 0.04, "min": 0.0, "max": 0.2, "step": 0.005}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 2**31 - 1,
+                "grain_seed": ("INT", {"default": 0, "min": 0, "max": 2**31 - 1,
                                  "tooltip": "зерно; в пачке у каждого кадра своё"}),
             }
         }
@@ -111,11 +118,11 @@ class ShpeshkaStyle:
     FUNCTION = "apply"
     CATEGORY = "Спешка"
 
-    def apply(self, images, strength, halftone, offset, grain, paper, seed):
+    def apply(self, images, strength, halftone, offset, grain, paper, grain_seed):
         out = []
         for i in range(images.shape[0]):
             rgb = images[i].detach().cpu().numpy()[..., :3]
-            res = stylize(rgb, strength, halftone, offset, grain, paper, seed + i)
+            res = stylize(rgb, strength, halftone, offset, grain, paper, grain_seed + i)
             out.append(torch.from_numpy(np.ascontiguousarray(res, dtype=np.float32)))
         return (torch.stack(out),)
 
