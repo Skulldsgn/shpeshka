@@ -58,7 +58,7 @@ def main():
     ap.add_argument("--palette", default=DEFAULT_PALETTE, help="HEX-цвета через запятую, \"\" = без палитры")
     ap.add_argument("--strength", type=float, default=0.9, help="сила палитры 0..1, 0 = выкл")
     ap.add_argument("--ink", type=float, default=0.35, help="порог заливки тушью, 0 = выкл")
-    ap.add_argument("--fill", type=int, default=21, help="заливать светлые детали внутри силуэтов меньше N px, 0 = выкл")
+    ap.add_argument("--fill", type=int, default=0, help="заливать светлые детали внутри силуэтов меньше N px, 0 = выкл")
     ap.add_argument("--paper", type=float, default=0.035, help="бумага, 0 = выкл")
     ap.add_argument("--grain", type=float, default=0.02, help="зерно, 0 = выкл")
     ap.add_argument("--dot", type=int, default=0, help="полутоновая ячейка в px, 0 = выкл")

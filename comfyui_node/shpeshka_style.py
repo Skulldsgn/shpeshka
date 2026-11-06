@@ -38,7 +38,7 @@ def palette_map(rgb, palette, strength=0.7, softness=0.06):
     return (flat * (1 - strength) + mapped * strength).reshape(rgb.shape)
 
 
-def ink_fill(rgb, ink, threshold, fill_px=21, soft=0.05):
+def ink_fill(rgb, ink, threshold, fill_px=0, soft=0.05):
     """Всё темнее порога заливается сплошной тушью.
     fill_px: светлые детали внутри тёмных масс тоньше этого размера (блики, черты лица) тоже заливаются."""
     if threshold <= 0:
@@ -46,11 +46,38 @@ def ink_fill(rgb, ink, threshold, fill_px=21, soft=0.05):
     lum = luminance(rgb)
     m = np.clip((threshold - lum) / soft + 0.5, 0, 1)
     if fill_px > 1:
-        k = int(fill_px) | 1  # фильтру нужен нечётный размер
-        mi = Image.fromarray((m * 255).astype(np.uint8))
-        closed = mi.filter(ImageFilter.MaxFilter(k)).filter(ImageFilter.MinFilter(k))  # морфологическое закрытие
-        m = np.maximum(m, np.asarray(closed, np.float32) / 255.0)
+        m = np.maximum(m, _round_close(m, fill_px / 2))
     return rgb * (1 - m[..., None]) + ink * m[..., None]
+
+
+def _box(a, r, axis):
+    """Скользящее среднее ширины 2r+1 вдоль оси (края дублируются)."""
+    pad = [(0, 0)] * a.ndim
+    pad[axis] = (r + 1, r)
+    c = np.cumsum(np.pad(a, pad, mode="edge"), axis=axis, dtype=np.float64)
+    n = a.shape[axis]
+    hi = np.take(c, np.arange(2 * r + 1, 2 * r + 1 + n), axis=axis)
+    lo = np.take(c, np.arange(0, n), axis=axis)
+    return ((hi - lo) / (2 * r + 1)).astype(np.float32)
+
+
+def _blur(a, sigma):
+    """Гаусс ≈ три прохода box-фильтра (float, без потери точности)."""
+    r = max(1, int(round((np.sqrt(4 * sigma * sigma + 1) - 1) / 2)))  # 3 бокса шириной 2r+1 ≈ σ
+    out = a.astype(np.float32)
+    for _ in range(3):
+        out = _box(_box(out, r, 0), r, 1)
+    return out
+
+
+def _round_close(m, r):
+    """Морфологическое закрытие круглым окном радиуса r (через гаусс + порог).
+    Квадратное окно оставляло ступеньки и прямоугольники на углах; круглое даёт плавные формы."""
+    sigma = max(r / 2.0, 0.5)
+    lo, ramp = 0.023, 0.02  # уровень гаусса на расстоянии r от края (Φ(-2)) и мягкость перехода
+    dil = np.clip((_blur(m, sigma) - lo) / ramp, 0, 1)                # расширение на r
+    ero = np.clip((_blur(dil, sigma) - (1 - lo - ramp)) / ramp, 0, 1)  # сужение обратно на r
+    return ero
 
 
 # ---------- фактуры ----------
@@ -103,7 +130,7 @@ def grain_and_paper(rgb, seed, grain, paper, paper_tint):
 
 
 def stylize(rgb, palette_text=DEFAULT_PALETTE, strength=0.9, dot=0, offset=0,
-            grain=0.02, paper=0.035, seed=0, ink_threshold=0.35, fill_px=21):
+            grain=0.02, paper=0.035, seed=0, ink_threshold=0.35, fill_px=0):
     """rgb: numpy (H, W, 3) float 0..1. Любой эффект выключается нулём, палитра — пустой строкой."""
     pal = parse_palette(palette_text)
     # тушь = самый тёмный цвет палитры (или почти чёрный, если палитры нет)

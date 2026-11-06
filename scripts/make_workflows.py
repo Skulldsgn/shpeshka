@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CLIP_L, T5, VAE = "clip_l.safetensors", "t5xxl_fp8_e4m3fn_scaled.safetensors", "ae.safetensors"
 SCHNELL, KONTEXT = "flux1-schnell-fp8.safetensors", "flux1-dev-kontext_fp8_scaled.safetensors"  # Schnell — чекпоинт «всё в одном» из models/checkpoints
-STYLE_DEFAULTS = ["#111111, #E9DFC8", 0.9, 0.35, 21, 0.035, 0.02, 0, 0, 0]
+STYLE_DEFAULTS = ["#111111, #E9DFC8", 0.9, 0.35, 0, 0.035, 0.02, 0, 0, 0]
 OURS, NOTE = ("#4a3a1c", "#2e2412"), ("#432", "#653")
 
 
