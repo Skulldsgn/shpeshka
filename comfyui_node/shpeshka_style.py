@@ -23,6 +23,13 @@ def luminance(rgb):
     return rgb @ LUMA
 
 
+def color_mask(rgb, lo=0.15, ramp=0.12):
+    """1 там, где цвет насыщенный (красный, синий...), 0 на чёрном, белом и серых.
+    Тушь, заливка деталей и полутона насыщенные цвета не трогают: красный тёмный по яркости, но это не тушь."""
+    sat = rgb.max(-1) - rgb.min(-1)
+    return np.clip((sat - lo) / ramp, 0, 1)
+
+
 # ---------- цвет ----------
 
 def palette_map(rgb, palette, strength=0.7, softness=0.06):
@@ -43,10 +50,10 @@ def ink_fill(rgb, ink, threshold, fill_px=0, soft=0.05):
     fill_px: светлые детали внутри тёмных масс тоньше этого размера (блики, черты лица) тоже заливаются."""
     if threshold <= 0:
         return rgb
-    lum = luminance(rgb)
-    m = np.clip((threshold - lum) / soft + 0.5, 0, 1)
+    keep = 1 - color_mask(rgb)
+    m = np.clip((threshold - luminance(rgb)) / soft + 0.5, 0, 1) * keep
     if fill_px > 1:
-        m = np.maximum(m, _round_close(m, fill_px / 2))
+        m = np.maximum(m, _round_close(m, fill_px / 2)) * keep
     return rgb * (1 - m[..., None]) + ink * m[..., None]
 
 
@@ -97,6 +104,7 @@ def halftone(rgb, ink, cell=8, angle=45, opacity=0.55):
     dist = np.sqrt(((u % cell) - cell / 2) ** 2 + ((v % cell) - cell / 2) ** 2) / (cell / 2)
     dark = 1 - luminance(rgb)
     band = np.clip((dark - 0.25) / 0.35, 0, 1)  # точки только в средних тонах и тенях
+    band = band * (1 - 0.65 * color_mask(rgb))  # на цветных плашках — лёгкие точки, а не сплошная грязь
     radius = np.sqrt(np.clip(dark, 0, 1)) * 0.9
     dot = (dist < radius).astype(np.float32) * band * opacity
     return rgb * (1 - dot[..., None]) + ink * dot[..., None]
